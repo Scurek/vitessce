@@ -94,6 +94,9 @@ import { lake2023, lake2023component } from './view-configs/lake-2023.js';
 import { kpmpPremiere, kpmpPremiereComponent } from './view-configs/kpmp-premiere.js';
 import { hubmapHeart, hubmapHeartComponent } from './view-configs/hubmap-heart.js';
 
+// Medvis Challenge
+import { medvisChallenge } from './view-configs/medvis-challenge.js'
+
 export const coordinationTypeConfigs = {
   [vapi.ct.EMBEDDING_ZOOM]: embeddingZoomConfig,
   [vapi.ct.EMBEDDING_TARGET_X]: embeddingTargetXConfig,
@@ -106,6 +109,9 @@ export const coordinationTypeConfigs = {
 // resulting ordering of elements in the DOM.
 
 export const configs = {
+  // Medvis Challenge
+  'medvis-challenge': medvisChallenge,
+
   'just-scatter': justScatter,
   'just-scatter-expression': justScatterExpression,
   'just-spatial': justSpatial,
@@ -213,6 +219,7 @@ export const publicConfigs = [
   'blin-2019',
   'rgb-ome-tiff',
   'segmentations-ome-tiff',
+  'medvis-challenge'
 ];
 
 const exemplarSmallStores = {
