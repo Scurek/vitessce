@@ -16,6 +16,7 @@ const defaultProps = {
   interpolation: { type: 'number', value: null, compare: true },
   colocations: { type: 'array', value: [], compare: true },
   colocationContrastLimits: { type: 'array', value: [], compare: true },
+  colocationColors: { type: 'array', value: [], compare: true },
 };
 
 /**

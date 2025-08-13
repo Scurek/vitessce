@@ -90,7 +90,6 @@ function ColocationChannelController({
   channels,
   channelId,
   domainType: newDomainType,
-  dimName,
   theme,
   loader,
   colormapOn,
@@ -106,7 +105,7 @@ function ColocationChannelController({
   const [domainType, setDomainType] = useState(null);
   const [use3d, setUse3d] = useState(null);
   const [selection, setSelection] = useState([
-    { ...channels[channelId].selection },
+    { ...channels[selectionIndices[0]].selection },
   ]);
 
   const rgbColor = toRgbUIString(colormapOn, color, theme);
@@ -116,7 +115,7 @@ function ColocationChannelController({
     // All state updates should happen within the mounted check.
     let mounted = true;
     if (dtype && loader && channels) {
-      const selections = [{ ...channels[channelId].selection }];
+      const selections = [{ ...channels[selectionIndices[0]].selection }];
       let domains;
       const hasDomainChanged = newDomainType !== domainType;
       const has3dChanged = use3d !== newUse3d;
@@ -184,7 +183,7 @@ function ColocationChannelController({
    */
   return (
     <Grid container direction="row" justifyContent="space-between">
-      <Grid size={10} container direction="column" justifyContent="center">
+      <Grid size={10} container direction="column">
         {selectionIndices.map((selectionIndex, index) => (
           // eslint-disable-next-line react/no-array-index-key
           <div key={index}>
@@ -209,7 +208,7 @@ function ColocationChannelController({
           </div>
         ))}
       </Grid>
-      <Grid size={1} container direction="column" justifyContent="center">
+      <Grid size={1} container direction="column">
         <Grid size={1} sx={{ marginTop: '4px' }}>
           <ChannelOptions
             handlePropertyChange={handlePropertyChange}

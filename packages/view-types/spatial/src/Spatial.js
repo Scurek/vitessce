@@ -419,6 +419,9 @@ class Spatial extends AbstractSpatialOrScatterplot {
         ? false
         : c.visible)),
       excludeBackground: useTransparentColor,
+      colocations: layerDef.colocations?.map(c => (c.visible ? c.selection : [])) ?? [],
+      colocationContrastLimits: layerDef.colocations?.map(c => c.sliders) ?? [],
+      colocationColors: layerDef.colocations?.map(c => c.color.map(col => col / 255)) ?? [],
     };
     if (!loader || !layerProps) return null;
     const {
@@ -525,6 +528,9 @@ class Spatial extends AbstractSpatialOrScatterplot {
       extensions,
       ...rgbInterleavedProps,
       ...rgbProps,
+      colocations: layerProps.colocations,
+      colocationContrastLimits: layerProps.colocationContrastLimits,
+      colocationColors: layerProps.colocationColors,
     });
   }
 

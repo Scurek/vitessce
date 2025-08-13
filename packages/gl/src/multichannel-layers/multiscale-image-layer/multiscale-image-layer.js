@@ -26,6 +26,7 @@ const defaultProps = {
   },
   colocations: { type: 'array', value: [], compare: true },
   colocationContrastLimits: { type: 'array', value: [], compare: true },
+  colocationColors: { type: 'array', value: [], compare: true },
 };
 
 /**
@@ -47,7 +48,8 @@ const defaultProps = {
  * @property {boolean=} excludeBackground Whether to exclude the background image. The background image is also excluded for opacity!=1.
  * @property {Array=} extensions [deck.gl extensions](https://deck.gl/docs/developer-guide/custom-layers/layer-extensions) to add to the layers.
  * @property {Array.<Array.<number>>} colocations
- * @property {Array.<Array.<Array.<number>>>} colocationContrastLimits List of individual lists of [begin, end] values to control each colocation's ramp function.
+ * @property {Array.<Array.<Array.<number>>>} colocationContrastLimits
+ * @property {Array.<Array.<number>>} colocationColors
  */
 
 /**

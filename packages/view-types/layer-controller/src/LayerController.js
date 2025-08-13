@@ -274,18 +274,12 @@ export default function LayerController(props) {
   };
 
   const handleColocationChannelAdd = async () => {
-    const selection = {};
-    labels.forEach((label) => {
-      // Set new image to default selection for non-global selections (0)
-      // and use current global selection otherwise.
-      selection[label] = GLOBAL_LABELS.includes(label)
-        ? globalLabelValues[label] || 0
-        : 0;
-    });
-    // domains,
+    if (channels.length === 0) {
+      return;
+    }
     const { sliders } = await getDomainsAndSliders(
       loader,
-      [selection],
+      [channels[0].selection],
       domainType,
       use3d,
     );
@@ -300,8 +294,8 @@ export default function LayerController(props) {
     // newAreLayerChannelsLoading[loadingId] = true;
     // setAreLayerChannelsLoading(newAreLayerChannelsLoading);
     const colocation = {
-      selection: [selection],
-      sliders: [sliders[0]],
+      selection: [0, 1],
+      sliders: [sliders[0], sliders[0]],
       visible,
       color,
     };
@@ -537,7 +531,7 @@ export default function LayerController(props) {
               key={`channel-controller-${channelId}`}
               dimName={channelLabel}
               visibility={c.visible}
-              selectionIndices={c.selection.map(selection => selection[channelLabel])}
+              selectionIndices={c.selection}
               sliders={c.sliders}
               color={c.color}
               channels={channels}

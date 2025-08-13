@@ -25,7 +25,8 @@ export function ChannelSelectionDropdown({
       inputProps={{ 'aria-label': 'Select a channel' }}
     >
       {channelOptions.map((opt, i) => (
-        <option disabled={disabled} key={opt} value={i}>
+        // eslint-disable-next-line react/no-array-index-key
+        <option disabled={disabled} key={`${i}-${opt}`} value={i}>
           {opt}
         </option>
       ))}

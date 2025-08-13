@@ -1,6 +1,7 @@
 export default `\
 #define SHADER_NAME xr-layer-fragment-shader
 #define MAX_COLOCATIONS 6
+#define COLOCATION_LIMITS_SIZE 72
 #define COLOCATION_ARRAY_SIZE 36
 
 precision highp float;
@@ -22,18 +23,18 @@ uniform vec2 contrastLimits[6];
 
 // colocations (MedVis challenge)
 uniform bool colocations[COLOCATION_ARRAY_SIZE];
-uniform vec2 colocationContrastLimits[COLOCATION_ARRAY_SIZE];
+uniform vec2 colocationContrastLimits[COLOCATION_LIMITS_SIZE];
 uniform vec3 colocationColors[MAX_COLOCATIONS];
 
 float combine_intensity(inout int activeChannels, float intensities[6], int channel) {
-  float combined = 0.0;
+  float combined = 1.0;
   for (int i = 0; i < 6; i++) {
     int colocationIndex = channel * 6 + i;
     if (colocations[colocationIndex]) {
       activeChannels++;
       float intensity = intensities[i];
       DECKGL_PROCESS_INTENSITY(intensity, colocationContrastLimits[colocationIndex], i);
-      combined += intensity;
+      combined *= intensity;
     }
   }
   return combined;
@@ -44,7 +45,8 @@ void compute_colocations(inout vec4 fragcolor, float intensities[6]) {
     int activeChannels = 0;
     float combined = combine_intensity(activeChannels, intensities, i);
     if (activeChannels > 0) {
-      vec3 color = (combined / float(activeChannels)) * colocationColors[i];
+      // vec3 color = (combined / float(activeChannels)) * colocationColors[i];
+      vec3 color = combined * colocationColors[i];
       fragcolor.rgb += color;
     }
   }
@@ -74,7 +76,7 @@ void main() {
 
   DECKGL_MUTATE_COLOR(gl_FragColor, intensity0, intensity1, intensity2, intensity3, intensity4, intensity5, vTexCoord);
 
-  // compute_colocations(gl_FragColor, unprocessedIntensities);
+  compute_colocations(gl_FragColor, unprocessedIntensities);
 
   geometry.uv = vTexCoord;
   DECKGL_FILTER_COLOR(gl_FragColor, geometry);

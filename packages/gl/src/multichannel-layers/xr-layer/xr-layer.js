@@ -8,7 +8,8 @@ import { COORDINATE_SYSTEM, Layer, project32, picking } from '@deck.gl/core';
 import { Model, Geometry, Texture2D } from '@luma.gl/core';
 import { ProgramManager } from '@luma.gl/engine';
 import channels from './shader-modules/channel-intensity.js';
-import { padContrastLimits, padCoreferenceArray, padCoreferenceContrastLimits } from '../utils.js';
+import { padContrastLimits } from '../utils.js';
+import { buildCoreferenceMatrix, padCoreferenceContrastLimits, padCoreferenceColors } from '../utils-coreference.js';
 import { getRenderingAttrs } from './utils.js';
 
 const defaultProps = {
@@ -26,6 +27,7 @@ const defaultProps = {
   },
   colocations: { type: 'array', value: [], compare: true },
   colocationContrastLimits: { type: 'array', value: [], compare: true },
+  colocationColors: { type: 'array', value: [], compare: true },
 };
 
 /**
@@ -42,7 +44,8 @@ const defaultProps = {
  * Thus setting this to a truthy value (with a colormap set) indicates that the shader should make that color transparent.
  * @property {number=} interpolation The TEXTURE_MIN_FILTER and TEXTURE_MAG_FILTER for WebGL rendering (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter) - default is GL.NEAREST
  * @property {Array.<Array.<number>>} colocations
- * @property {Array.<Array.<Array.<number>>>} colocationContrastLimits List of individual lists of [begin, end] values to control each colocation's ramp function.
+ * @property {Array.<Array.<Array.<number>>>} colocationContrastLimits
+ * @property {Array.<Array.<number>>} colocationColors
  */
 /**
  * @type {{ new (...props: import('@vivjs/types').Viv<LayerProps>[]) }}
@@ -239,7 +242,7 @@ export default class MultichannelXRLayer extends Layer {
   draw({ uniforms }) {
     const { textures, model } = this.state;
     if (textures && model) {
-      const { contrastLimits, domain, dtype, channelsVisible, colocations } = this.props;
+      const { contrastLimits, domain, dtype, channelsVisible, colocations, colocationContrastLimits, colocationColors } = this.props;
       // Check number of textures not null.
       const numTextures = Object.values(textures).filter(t => t).length;
       // Slider values and color values can come in before textures since their data is async.
@@ -251,20 +254,17 @@ export default class MultichannelXRLayer extends Layer {
         dtype,
       });
 
-      const paddedCoreferenceArray = padCoreferenceArray({
-        coreferenceArray: colocations,
-      });
-
-      const paddedColocationContrastLimits = padCoreferenceContrastLimits({
-        contrastLimits: colocations,
-      });
+      const coreferenceMatrix = buildCoreferenceMatrix(colocations);
+      const paddedColocationContrastLimits = padCoreferenceContrastLimits(colocationContrastLimits);
+      const paddedColocationColors = padCoreferenceColors(colocationColors);
 
       model
         .setUniforms({
           ...uniforms,
           contrastLimits: paddedContrastLimits,
-          colocations: paddedCoreferenceArray,
+          colocations: coreferenceMatrix,
           colocationContrastLimits: paddedColocationContrastLimits,
+          colocationColors: paddedColocationColors,
           ...textures,
         })
         .draw();
