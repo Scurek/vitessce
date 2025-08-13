@@ -9,6 +9,7 @@ export { default as PaddedExpressionHeatmapBitmapLayer } from './PaddedExpressio
 
 export {
   GLSL_COLORMAPS, GLSL_COLORMAP_DEFAULT, DEFAULT_GL_OPTIONS, SELECTION_TYPE,
+  MAX_COLOCATION_CHANNELS,
 } from './constants.js';
 
 // Layer extensions
@@ -17,6 +18,7 @@ export { default as SelectionExtension } from './SelectionExtension/index.js';
 export { default as BitmaskLayer } from './BitmaskLayer.js';
 export { default as BitmaskLayerBeta } from './BitmaskLayerBeta.js';
 export { default as ContourLayerWithText } from './ContourLayerWithText.js';
+export { default as MultichannelLayer } from './multichannel-layers/multiscale-image-layer/multiscale-image-layer.js';
 
 export {
   TILE_SIZE, MAX_ROW_AGG, MIN_ROW_AGG,

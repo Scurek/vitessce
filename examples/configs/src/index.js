@@ -95,7 +95,7 @@ import { kpmpPremiere, kpmpPremiereComponent } from './view-configs/kpmp-premier
 import { hubmapHeart, hubmapHeartComponent } from './view-configs/hubmap-heart.js';
 
 // Medvis Challenge
-import { medvisChallenge } from './view-configs/medvis-challenge.js'
+import { medvisChallenge } from './view-configs/medvis-challenge.js';
 
 export const coordinationTypeConfigs = {
   [vapi.ct.EMBEDDING_ZOOM]: embeddingZoomConfig,
@@ -219,7 +219,7 @@ export const publicConfigs = [
   'blin-2019',
   'rgb-ome-tiff',
   'segmentations-ome-tiff',
-  'medvis-challenge'
+  'medvis-challenge',
 ];
 
 const exemplarSmallStores = {

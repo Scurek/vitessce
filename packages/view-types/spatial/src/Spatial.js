@@ -419,6 +419,10 @@ class Spatial extends AbstractSpatialOrScatterplot {
         ? false
         : c.visible)),
       excludeBackground: useTransparentColor,
+      colocations: layerDef.colocations?.map(c => (c.visible ? c.selection : [])) ?? [],
+      colocationsNormalizers: layerDef.colocations?.map(c => c.normalizer) ?? [],
+      colocationContrastLimits: layerDef.colocations?.map(c => c.sliders) ?? [],
+      colocationColors: layerDef.colocations?.map(c => c.color.map(col => col / 255)) ?? [],
     };
     if (!loader || !layerProps) return null;
     const {
@@ -502,7 +506,6 @@ class Spatial extends AbstractSpatialOrScatterplot {
         true, true, true,
       ],
     } : {};
-
     return new Layer({
       loader: layerLoader,
       id: `${layerDef.use3d ? 'volume' : 'image'}-layer-${layerDef.index}-${i}`,
@@ -526,6 +529,10 @@ class Spatial extends AbstractSpatialOrScatterplot {
       extensions,
       ...rgbInterleavedProps,
       ...rgbProps,
+      colocations: layerProps.colocations,
+      colocationsNormalizers: layerProps.colocationsNormalizers,
+      colocationContrastLimits: layerProps.colocationContrastLimits,
+      colocationColors: layerProps.colocationColors,
     });
   }
 
