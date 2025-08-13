@@ -1,7 +1,7 @@
 /* eslint-disable no-plusplus */
 import shortNumber from 'short-number';
 import { Matrix4 } from 'math.gl';
-import { viv, BitmaskLayer } from '@vitessce/gl';
+import { viv, BitmaskLayer, MultichannelLayer } from '@vitessce/gl';
 import { DEFAULT_LAYER_TYPE_ORDERING } from '@vitessce/spatial-utils';
 import { extent } from 'd3-array';
 import {
@@ -154,7 +154,7 @@ export function getLayerLoaderTuple(data, use3d) {
     return [viv.VolumeLayer, Array.isArray(loader) ? loader : [loader]];
   }
   const Layer = (Array.isArray(data) && data.length > 1)
-    ? viv.MultiscaleImageLayer
+    ? MultichannelLayer
     : viv.ImageLayer;
   return [Layer, loader];
 }

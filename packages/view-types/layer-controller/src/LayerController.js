@@ -207,7 +207,7 @@ export default function LayerController(props) {
 
   // Handles adding a channel, creating a default selection
   // for the current global settings and domain type.
-  const handleChannelAdd = async () => {
+  const handleChannelAdd = async (multichannel = false) => {
     const selection = {};
     labels.forEach((label) => {
       // Set new image to default selection for non-global selections (0)
@@ -236,6 +236,9 @@ export default function LayerController(props) {
       visible,
       color,
     };
+    if (multichannel) {
+      channel.subchannels = [{ selection }];
+    }
     setImageLayerCallback(() => {
       setChannel({ ...channel, slider: sliders[0] }, newChannelId);
       const areLayerChannelsLoadingCallback = [...newAreLayerChannelsLoading];
@@ -323,7 +326,26 @@ export default function LayerController(props) {
           // property is something like "selection" or "slider."
           // value is the actual change, like { channel: "DAPI" }.
           const update = { [property]: value };
-          if (property === 'selection') {
+          if (property === 'selection-multi') {
+            const { subchannelIndex, selection } = value;
+            // Channel is loading until the layer callback is called
+            // by the layer, which fetches the raster data.
+            setIsLoading(true);
+            const subchannelUpdate = { subchannels: [...c.subchannels] };
+            subchannelUpdate.subchannels[subchannelIndex] = {
+              selection: {
+                ...globalLabelValues,
+                ...selection,
+              },
+            };
+            setChannel({ ...c, ...subchannelUpdate }, channelId);
+            // Call back for raster layer handles update of UI
+            // like sliders and the loading state of the channel.
+            // setImageLayerCallback(async () => {
+            //   setImageLayerCallback(null);
+            //   setIsLoading(false);
+            // });
+          } else if (property === 'selection') {
             // Channel is loading until the layer callback is called
             // by the layer, which fetches the raster data.
             setIsLoading(true);
@@ -391,6 +413,10 @@ export default function LayerController(props) {
             setRasterLayerCallback={setImageLayerCallback}
             isLoading={areLayerChannelsLoading[channelId]}
             use3d={use3d}
+            subchannels={c.subchannels?.map(({ selection }) => ({
+              selection,
+              selectionIndex: selection[channelLabel],
+            }))}
           />
         );
       },
@@ -451,17 +477,31 @@ export default function LayerController(props) {
         ? null
         : channelControllers}
       {photometricInterpretation === 'RGB' ? null : (
-        <Button
-          disabled={channels.length === viv.MAX_CHANNELS}
-          onClick={handleChannelAdd}
-          fullWidth
-          variant="outlined"
-          style={buttonStyles}
-          startIcon={<AddIcon />}
-          size="small"
-        >
-          Add Channel
-        </Button>
+        <div>
+          <Button
+            disabled={channels.length === viv.MAX_CHANNELS}
+            onClick={() => handleChannelAdd(false)}
+            fullWidth
+            variant="outlined"
+            style={buttonStyles}
+            startIcon={<AddIcon />}
+            size="small"
+          >
+            Add Channel
+          </Button>
+          <Button
+            disabled={channels.length === viv.MAX_CHANNELS}
+            onClick={() => handleChannelAdd(true)}
+            fullWidth
+            variant="outlined"
+            style={buttonStyles}
+            startIcon={<AddIcon />}
+            size="small"
+          >
+            Add Multichannel
+          </Button>
+        </div>
+
       )}
     </>
   );

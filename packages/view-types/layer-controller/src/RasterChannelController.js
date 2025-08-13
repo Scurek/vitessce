@@ -83,6 +83,7 @@ function ChannelSlider({
  * @prop {function} handleChannelRemove When a channel is removed, this is called.
  * @prop {function} handleIQRUpdate When the IQR button is clicked, this is called.
  * @prop {number} selectionIndex The current numeric index of the selection.
+ * @prop {array} [subchannels] The current numeric index for the second subchannel.
  */
 function RasterChannelController({
   visibility = false,
@@ -102,6 +103,7 @@ function RasterChannelController({
   selectionIndex,
   isLoading,
   use3d: newUse3d,
+  subchannels,
 }) {
   const { dtype } = getSourceFromLoader(loader);
   const [domain, setDomain] = useState(null);
@@ -206,6 +208,18 @@ function RasterChannelController({
           />
         </Grid>
       </Grid>
+      {subchannels && (
+        subchannels.map((subchannel, index) => (
+          <Grid size={10} key={subchannel.selectionIndex}>
+            <ChannelSelectionDropdown
+              handleChange={v => handlePropertyChange('selection-multi', { subchannelIndex: index, selection: createSelection(v) })}
+              selectionIndex={subchannel.selectionIndex}
+              channelOptions={channelOptions}
+              disabled={isLoading}
+            />
+          </Grid>
+        ))
+      )}
       <Grid container direction="row" justifyContent="space-between">
         <Grid size={2}>
           <ChannelVisibilityCheckbox
