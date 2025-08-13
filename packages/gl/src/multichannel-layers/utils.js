@@ -2,6 +2,7 @@
 import { OrthographicView } from '@deck.gl/core';
 import { Matrix4 } from '@math.gl/core';
 import { DTYPE_VALUES, MAX_CHANNELS } from '@hms-dbmi/viv';
+import { MAX_COLOCATION_CHANNELS } from '../constants.js';
 
 export function range(len) {
   return [...Array(len).keys()];
@@ -66,6 +67,79 @@ export function padContrastLimits({
   ).reduce((acc, val) => acc.concat(val), []);
 
   return paddedContrastLimits;
+}
+
+/**
+ * @param {{
+ *   coreferenceArray?: Array<Array<number>>,
+ * }}
+ */
+export function padCoreferenceArray({
+  coreferenceArray = [],
+}) {
+  const newCoreferenceArray = [];
+  for (let i = 0; i < coreferenceArray.length; i += 1) {
+    const padSize = MAX_CHANNELS - coreferenceArray[i].length;
+    if (padSize < 0) {
+      throw Error(
+        `${coreferenceArray[i].length} sliders passed in coreference ${i}, but only ${MAX_CHANNELS} are allowed.`,
+      );
+    }
+    const paddedCoreferenceArray = padWithDefault(
+      coreferenceArray[i],
+      0,
+      padSize,
+    );
+    newCoreferenceArray.push(...paddedCoreferenceArray);
+  }
+
+  const padSize = MAX_COLOCATION_CHANNELS - coreferenceArray.length;
+  if (padSize < 0) {
+    throw Error(
+      `${coreferenceArray.length} colocations passed in, but only ${MAX_COLOCATION_CHANNELS} are allowed.`,
+    );
+  }
+
+  newCoreferenceArray.concat(Array(padSize * MAX_CHANNELS).fill(0));
+
+  return newCoreferenceArray;
+}
+
+/**
+ * @param {{
+ *   contrastLimits?: Array<Array<[min: number, max: number]>>,
+ *   numOfColocations: number,
+ * }}
+ */
+export function padCoreferenceContrastLimits({
+  contrastLimits = [],
+}) {
+  const newContrastLimits = [];
+  for (let i = 0; i < contrastLimits.length; i += 1) {
+    const padSize = MAX_CHANNELS - contrastLimits[i].length;
+    if (padSize < 0) {
+      throw Error(
+        `${contrastLimits[i].length} sliders passed in coreference ${i}, but only ${MAX_CHANNELS} are allowed.`,
+      );
+    }
+    const paddedContrastLimits = padWithDefault(
+      contrastLimits[i],
+      [0, 0],
+      padSize,
+    ).reduce((acc, val) => acc.concat(val), []);
+    newContrastLimits.push(...paddedContrastLimits);
+  }
+
+  const padSize = MAX_COLOCATION_CHANNELS - contrastLimits.length;
+  if (padSize < 0) {
+    throw Error(
+      `${contrastLimits.length} colocations passed in, but only ${MAX_COLOCATION_CHANNELS} are allowed.`,
+    );
+  }
+
+  newContrastLimits.concat(Array(padSize * MAX_CHANNELS * 2).fill(0));
+
+  return newContrastLimits;
 }
 
 export function onPointer(layer) {

@@ -24,6 +24,8 @@ const defaultProps = {
     value: [new ColorPaletteExtension()],
     compare: true,
   },
+  colocations: { type: 'array', value: [], compare: true },
+  colocationContrastLimits: { type: 'array', value: [], compare: true },
 };
 
 /**
@@ -44,6 +46,8 @@ const defaultProps = {
  * @property {string=} refinementStrategy 'best-available' | 'no-overlap' | 'never' will be passed to TileLayer. A default will be chosen based on opacity.
  * @property {boolean=} excludeBackground Whether to exclude the background image. The background image is also excluded for opacity!=1.
  * @property {Array=} extensions [deck.gl extensions](https://deck.gl/docs/developer-guide/custom-layers/layer-extensions) to add to the layers.
+ * @property {Array.<Array.<number>>} colocations
+ * @property {Array.<Array.<Array.<number>>>} colocationContrastLimits List of individual lists of [begin, end] values to control each colocation's ramp function.
  */
 
 /**

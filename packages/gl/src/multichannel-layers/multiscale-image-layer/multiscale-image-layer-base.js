@@ -14,6 +14,8 @@ const defaultProps = {
   domain: { type: 'array', value: [], compare: true },
   viewportId: { type: 'string', value: '', compare: true },
   interpolation: { type: 'number', value: null, compare: true },
+  colocations: { type: 'array', value: [], compare: true },
+  colocationContrastLimits: { type: 'array', value: [], compare: true },
 };
 
 /**

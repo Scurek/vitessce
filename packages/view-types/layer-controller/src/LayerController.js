@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useId } from 'react-aria';
-import { viv } from '@vitessce/gl';
+import { viv, MAX_COLOCATION_CHANNELS } from '@vitessce/gl';
 import {
   GLOBAL_LABELS,
   getSourceFromLoader,
@@ -27,6 +27,7 @@ import {
   useOverflowEllipsisGridStyles,
   useAccordionStyles,
 } from './styles.js';
+import ColocationChannelController from './ColocationChannelController.js';
 
 
 function TabPanel(props) {
@@ -117,6 +118,7 @@ export default function LayerController(props) {
     resolution,
     use3d,
     modelMatrix,
+    colocations,
   } = layer;
   // Channels are used in a lot of callbacks and change handlers
   // so ensuring they have an up to date copy of the data ensures consistency.
@@ -126,6 +128,12 @@ export default function LayerController(props) {
     channelRef.current = channels;
     return undefined;
   }, [channels]);
+
+  const colocationsRef = useRef(colocations);
+  useEffect(() => {
+    colocationsRef.current = colocations;
+    return undefined;
+  }, [colocations]);
 
   const layerControlsId = useId();
   const firstSelection = channels[0]?.selection || {};
@@ -200,6 +208,25 @@ export default function LayerController(props) {
     handleLayerChange({ ...layer, channels: newChannels });
   }
 
+  function setColocationChannel(v, i) {
+    const newColocations = [...colocationsRef.current];
+    newColocations[i] = v;
+    handleLayerChange({ ...layer, colocations: newColocations });
+  }
+
+  function addColocationChannel(v) {
+    const newColocations = colocationsRef.current !== undefined
+      ? [...colocationsRef.current, v]
+      : [v];
+    handleLayerChange({ ...layer, colocations: newColocations });
+  }
+
+  function removeColocationChannel(i) {
+    const newColocations = [...colocationsRef.current];
+    newColocations.splice(i, 1);
+    handleLayerChange({ ...layer, colocations: newColocations });
+  }
+
   const setAreAllChannelsLoading = (val) => {
     const newAreLayerChannelsLoading = channelRef.current.map(() => val);
     setAreLayerChannelsLoading(newAreLayerChannelsLoading);
@@ -207,7 +234,7 @@ export default function LayerController(props) {
 
   // Handles adding a channel, creating a default selection
   // for the current global settings and domain type.
-  const handleChannelAdd = async (multichannel = false) => {
+  const handleChannelAdd = async () => {
     const selection = {};
     labels.forEach((label) => {
       // Set new image to default selection for non-global selections (0)
@@ -236,9 +263,6 @@ export default function LayerController(props) {
       visible,
       color,
     };
-    if (multichannel) {
-      channel.subchannels = [{ selection }];
-    }
     setImageLayerCallback(() => {
       setChannel({ ...channel, slider: sliders[0] }, newChannelId);
       const areLayerChannelsLoadingCallback = [...newAreLayerChannelsLoading];
@@ -247,6 +271,48 @@ export default function LayerController(props) {
       setImageLayerCallback(null);
     });
     addChannel(channel);
+  };
+
+  const handleColocationChannelAdd = async () => {
+    const selection = {};
+    labels.forEach((label) => {
+      // Set new image to default selection for non-global selections (0)
+      // and use current global selection otherwise.
+      selection[label] = GLOBAL_LABELS.includes(label)
+        ? globalLabelValues[label] || 0
+        : 0;
+    });
+    // domains,
+    const { sliders } = await getDomainsAndSliders(
+      loader,
+      [selection],
+      domainType,
+      use3d,
+    );
+    // const domain = domains[0];
+    // const slider = domain;
+    const color = [255, 255, 255];
+    const visible = true;
+    // const newColocationId = colocations?.length ?? 0;
+    // const newAreLayerChannelsLoading = [...areLayerChannelsLoading];
+
+    // const loadingId = newColocationId + viv.MAX_CHANNELS;
+    // newAreLayerChannelsLoading[loadingId] = true;
+    // setAreLayerChannelsLoading(newAreLayerChannelsLoading);
+    const colocation = {
+      selection: [selection],
+      sliders: [sliders[0]],
+      visible,
+      color,
+    };
+    // setImageLayerCallback(() => {
+    //   setColocationChannel({ ...colocation, slider: [sliders[0]] }, newColocationId);
+    //   const areLayerChannelsLoadingCallback = [...newAreLayerChannelsLoading];
+    //   areLayerChannelsLoadingCallback[loadingId] = false;
+    //   setAreLayerChannelsLoading(areLayerChannelsLoadingCallback);
+    //   setImageLayerCallback(null);
+    // });
+    addColocationChannel(colocation);
   };
 
   const handleDomainChange = async (value) => {
@@ -326,26 +392,7 @@ export default function LayerController(props) {
           // property is something like "selection" or "slider."
           // value is the actual change, like { channel: "DAPI" }.
           const update = { [property]: value };
-          if (property === 'selection-multi') {
-            const { subchannelIndex, selection } = value;
-            // Channel is loading until the layer callback is called
-            // by the layer, which fetches the raster data.
-            setIsLoading(true);
-            const subchannelUpdate = { subchannels: [...c.subchannels] };
-            subchannelUpdate.subchannels[subchannelIndex] = {
-              selection: {
-                ...globalLabelValues,
-                ...selection,
-              },
-            };
-            setChannel({ ...c, ...subchannelUpdate }, channelId);
-            // Call back for raster layer handles update of UI
-            // like sliders and the loading state of the channel.
-            // setImageLayerCallback(async () => {
-            //   setImageLayerCallback(null);
-            //   setIsLoading(false);
-            // });
-          } else if (property === 'selection') {
+          if (property === 'selection') {
             // Channel is loading until the layer callback is called
             // by the layer, which fetches the raster data.
             setIsLoading(true);
@@ -413,14 +460,104 @@ export default function LayerController(props) {
             setRasterLayerCallback={setImageLayerCallback}
             isLoading={areLayerChannelsLoading[channelId]}
             use3d={use3d}
-            subchannels={c.subchannels?.map(({ selection }) => ({
-              selection,
-              selectionIndex: selection[channelLabel],
-            }))}
           />
         );
       },
     );
+  }
+
+  let colocationChannelControllers = [];
+  if (labels.length > 0) {
+    const channelLabel = labels.find(c => c === 'channel' || c === 'c') || labels[0];
+    const colocationOptions = channels?.map(c => channelOptions[c.selection[channelLabel]]) ?? [];
+    if (colocationOptions.length > 0) {
+      colocationChannelControllers = colocations?.map(
+        (c, channelId) => {
+          const loadingId = channelId + viv.MAX_CHANNELS;
+          // Update the auxiliary store with the current loading state of a channel.
+          // const setIsLoading = (val) => {
+          //   const newAreLayerChannelsLoading = [...areLayerChannelsLoading];
+          //   newAreLayerChannelsLoading[loadingId] = val;
+          //   setAreLayerChannelsLoading(newAreLayerChannelsLoading);
+          // };
+          // Change one property of a channel (for now - soon
+          // nested structures allowing for multiple z/t selecitons at once, for example).
+          const handleChannelPropertyChange = async (property, value, index = 0) => {
+            const update = {};
+            if (property === 'selection') {
+              // setIsLoading(true);
+              update.selection = [...colocations[channelId].selection];
+              update.selection[index] = value;
+
+              const selections = [
+                channels[value][property],
+              ];
+              const { sliders } = await getDomainsAndSliders(
+                loader,
+                selections,
+                domainType,
+                use3d,
+              );
+              update.sliders = [...colocations[channelId].sliders];
+              [update.sliders[index]] = sliders;
+              setColocationChannel({ ...c, ...update }, channelId);
+
+              // Call back for raster layer handles update of UI
+              // like sliders and the loading state of the channel.
+              // setImageLayerCallback(async () => {
+              //   const selections = [
+              //     { ...colocations[channelId][property][index], ...value },
+              //   ];
+              //   const { sliders } = await getDomainsAndSliders(
+              //     loader,
+              //     selections,
+              //     domainType,
+              //     use3d,
+              //   );
+              //   update.sliders = [...colocations[channelId].sliders];
+              //   [update.sliders[index]] = sliders;
+              //   setColocationChannel({ ...c, ...update }, channelId);
+              //   setImageLayerCallback(null);
+              //   setIsLoading(false);
+              // });
+            } else if (property === 'slider') {
+              update.sliders = [...colocations[channelId].sliders];
+              update.sliders[index] = value;
+              setColocationChannel({ ...c, ...update }, channelId);
+            } else {
+              setColocationChannel({ ...c, ...{ [property]: value } }, channelId);
+            }
+          };
+          const handleChannelRemove = () => {
+            removeColocationChannel(channelId);
+          };
+          return (
+            <ColocationChannelController
+              // eslint-disable-next-line react/no-array-index-key
+              key={`channel-controller-${channelId}`}
+              dimName={channelLabel}
+              visibility={c.visible}
+              selectionIndices={c.selection.map(selection => selection[channelLabel])}
+              sliders={c.sliders}
+              color={c.color}
+              channels={channels}
+              channelId={channelId}
+              domainType={domainType}
+              loader={loader}
+              globalLabelValues={globalLabelValues}
+              theme={theme}
+              channelOptions={colocationOptions}
+              colormapOn={Boolean(colormap)}
+              handlePropertyChange={handleChannelPropertyChange}
+              handleChannelRemove={handleChannelRemove}
+              setRasterLayerCallback={setImageLayerCallback}
+              isLoading={areLayerChannelsLoading[loadingId]}
+              use3d={use3d}
+            />
+          );
+        },
+      );
+    }
   }
 
   const { classes: controllerSectionClasses } = useControllerSectionStyles();
@@ -477,32 +614,36 @@ export default function LayerController(props) {
         ? null
         : channelControllers}
       {photometricInterpretation === 'RGB' ? null : (
-        <div>
-          <Button
-            disabled={channels.length === viv.MAX_CHANNELS}
-            onClick={() => handleChannelAdd(false)}
-            fullWidth
-            variant="outlined"
-            style={buttonStyles}
-            startIcon={<AddIcon />}
-            size="small"
-          >
-            Add Channel
-          </Button>
-          <Button
-            disabled={channels.length === viv.MAX_CHANNELS}
-            onClick={() => handleChannelAdd(true)}
-            fullWidth
-            variant="outlined"
-            style={buttonStyles}
-            startIcon={<AddIcon />}
-            size="small"
-          >
-            Add Multichannel
-          </Button>
-        </div>
-
+        <Button
+          disabled={channels.length === viv.MAX_CHANNELS}
+          onClick={handleChannelAdd}
+          fullWidth
+          variant="outlined"
+          style={buttonStyles}
+          startIcon={<AddIcon />}
+          size="small"
+        >
+          Add Channel
+        </Button>
       )}
+      {photometricInterpretation === 'RGB'
+        ? null
+        : (
+          <div style={{ marginTop: '6px' }}>
+            {colocationChannelControllers}
+            <Button
+              disabled={colocations?.length === MAX_COLOCATION_CHANNELS}
+              onClick={handleColocationChannelAdd}
+              fullWidth
+              variant="outlined"
+              style={buttonStyles}
+              startIcon={<AddIcon />}
+              size="small"
+            >
+              Add Colocation Channel
+            </Button>
+          </div>
+        )}
     </>
   );
   return (

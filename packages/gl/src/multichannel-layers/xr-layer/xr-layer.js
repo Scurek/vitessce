@@ -8,7 +8,7 @@ import { COORDINATE_SYSTEM, Layer, project32, picking } from '@deck.gl/core';
 import { Model, Geometry, Texture2D } from '@luma.gl/core';
 import { ProgramManager } from '@luma.gl/engine';
 import channels from './shader-modules/channel-intensity.js';
-import { padContrastLimits } from '../utils.js';
+import { padContrastLimits, padCoreferenceArray, padCoreferenceContrastLimits } from '../utils.js';
 import { getRenderingAttrs } from './utils.js';
 
 const defaultProps = {
@@ -24,7 +24,8 @@ const defaultProps = {
     value: GL.NEAREST,
     compare: true,
   },
-  colocations: { type: 'array', value: new Array(36).fill(0), compare: true },
+  colocations: { type: 'array', value: [], compare: true },
+  colocationContrastLimits: { type: 'array', value: [], compare: true },
 };
 
 /**
@@ -40,6 +41,8 @@ const defaultProps = {
  * @property {Object=} modelMatrix Math.gl Matrix4 object containing an affine transformation to be applied to the image.
  * Thus setting this to a truthy value (with a colormap set) indicates that the shader should make that color transparent.
  * @property {number=} interpolation The TEXTURE_MIN_FILTER and TEXTURE_MAG_FILTER for WebGL rendering (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter) - default is GL.NEAREST
+ * @property {Array.<Array.<number>>} colocations
+ * @property {Array.<Array.<Array.<number>>>} colocationContrastLimits List of individual lists of [begin, end] values to control each colocation's ramp function.
  */
 /**
  * @type {{ new (...props: import('@vivjs/types').Viv<LayerProps>[]) }}
@@ -248,13 +251,20 @@ export default class MultichannelXRLayer extends Layer {
         dtype,
       });
 
-      colocations[0] = 1;
-      colocations[1] = 1;
+      const paddedCoreferenceArray = padCoreferenceArray({
+        coreferenceArray: colocations,
+      });
+
+      const paddedColocationContrastLimits = padCoreferenceContrastLimits({
+        contrastLimits: colocations,
+      });
+
       model
         .setUniforms({
           ...uniforms,
           contrastLimits: paddedContrastLimits,
-          colocations,
+          colocations: paddedCoreferenceArray,
+          colocationContrastLimits: paddedColocationContrastLimits,
           ...textures,
         })
         .draw();

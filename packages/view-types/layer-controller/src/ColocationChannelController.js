@@ -73,7 +73,7 @@ function ChannelSlider({
 /**
  * Controller for the handling the colormapping sliders.
  * @prop {boolean} visibility Whether or not this channel is "on"
- * @prop {array} slider Current slider range.
+ * @prop {array} sliders Current slider ranges.
  * @prop {array} color Current color for this channel.
  * @prop {array} domain Current max/min for this channel.
  * @prop {string} dimName Name of the dimensions this slider controls (usually "channel").
@@ -81,12 +81,11 @@ function ChannelSlider({
  * @prop {object} channelOptions All available options for this dimension (i.e channel names).
  * @prop {function} handlePropertyChange Callback for when a property (color, slider etc.) changes.
  * @prop {function} handleChannelRemove When a channel is removed, this is called.
- * @prop {function} handleIQRUpdate When the IQR button is clicked, this is called.
- * @prop {number} selectionIndex The current numeric index of the selection.
+ * @prop {number} selectionIndices The current numeric index of the selection.
  */
-function RasterChannelController({
+function ColocationChannelController({
   visibility = false,
-  slider,
+  sliders,
   color,
   channels,
   channelId,
@@ -98,8 +97,7 @@ function RasterChannelController({
   channelOptions,
   handlePropertyChange,
   handleChannelRemove,
-  handleIQRUpdate,
-  selectionIndex,
+  selectionIndices,
   isLoading,
   use3d: newUse3d,
 }) {
@@ -184,29 +182,41 @@ function RasterChannelController({
    *
    *  e.g { channel: 2 } // channel dimension, third channel
    */
-  const createSelection = index => ({ [dimName]: index });
   return (
-    <Grid container direction="column" justifyContent="center">
-      <Grid container direction="row" justifyContent="space-between">
-        <Grid size={10}>
-          <ChannelSelectionDropdown
-            handleChange={v => handlePropertyChange('selection', createSelection(v))
-            }
-            selectionIndex={selectionIndex}
-            channelOptions={channelOptions}
-            disabled={isLoading}
-          />
-        </Grid>
+    <Grid container direction="row" justifyContent="space-between">
+      <Grid size={10} container direction="column" justifyContent="center">
+        {selectionIndices.map((selectionIndex, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <div key={index}>
+            <Grid>
+              <ChannelSelectionDropdown
+                handleChange={v => handlePropertyChange('selection', v, index)}
+                selectionIndex={selectionIndex}
+                channelOptions={channelOptions}
+                disabled={isLoading}
+              />
+            </Grid>
+            <Grid marginLeft={1}>
+              <ChannelSlider
+                color={rgbColor}
+                slider={sliders[index]}
+                domain={domain || DOMAINS[dtype]}
+                dtype={dtype}
+                handleChange={v => handlePropertyChange('slider', v, index)}
+                disabled={isLoading}
+              />
+            </Grid>
+          </div>
+        ))}
+      </Grid>
+      <Grid size={1} container direction="column" justifyContent="center">
         <Grid size={1} sx={{ marginTop: '4px' }}>
           <ChannelOptions
             handlePropertyChange={handlePropertyChange}
             handleChannelRemove={handleChannelRemove}
-            handleIQRUpdate={handleIQRUpdate}
             disabled={isLoading}
           />
         </Grid>
-      </Grid>
-      <Grid container direction="row" justifyContent="space-between">
         <Grid size={2}>
           <ChannelVisibilityCheckbox
             color={rgbColor}
@@ -215,19 +225,9 @@ function RasterChannelController({
             disabled={isLoading}
           />
         </Grid>
-        <Grid size={9}>
-          <ChannelSlider
-            color={rgbColor}
-            slider={slider}
-            domain={domain || DOMAINS[dtype]}
-            dtype={dtype}
-            handleChange={v => handlePropertyChange('slider', v)}
-            disabled={isLoading}
-          />
-        </Grid>
       </Grid>
     </Grid>
   );
 }
 
-export default RasterChannelController;
+export default ColocationChannelController;
