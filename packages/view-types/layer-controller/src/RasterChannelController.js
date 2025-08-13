@@ -24,7 +24,7 @@ import { useChannelSliderStyles } from './styles.js';
  * @prop {function} handleChange Callback for each slider change.
  * @prop {array} domain Current max/min allowable slider values.
  */
-function ChannelSlider({
+export function ChannelSlider({
   color,
   slider = [0, 0],
   handleChange,

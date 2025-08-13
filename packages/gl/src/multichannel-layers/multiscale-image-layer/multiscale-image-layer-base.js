@@ -15,6 +15,7 @@ const defaultProps = {
   viewportId: { type: 'string', value: '', compare: true },
   interpolation: { type: 'number', value: null, compare: true },
   colocations: { type: 'array', value: [], compare: true },
+  colocationsNormalizers: { type: 'array', value: [], compare: true },
   colocationContrastLimits: { type: 'array', value: [], compare: true },
   colocationColors: { type: 'array', value: [], compare: true },
 };

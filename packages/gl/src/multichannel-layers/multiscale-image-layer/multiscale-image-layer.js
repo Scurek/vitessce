@@ -25,6 +25,7 @@ const defaultProps = {
     compare: true,
   },
   colocations: { type: 'array', value: [], compare: true },
+  colocationsNormalizers: { type: 'array', value: [], compare: true },
   colocationContrastLimits: { type: 'array', value: [], compare: true },
   colocationColors: { type: 'array', value: [], compare: true },
 };

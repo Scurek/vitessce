@@ -4,17 +4,25 @@ import { padWithDefault } from './utils.js';
 
 /**
  * @param { Array<Array<number>> } [coreferenceArray]
+ * @param { Array<Array<[min: number, max: number]>> } [contrastLimits]
  */
 export function buildCoreferenceMatrix(
   coreferenceArray = [],
+  contrastLimits = [],
 ) {
   const coreferenceMatrix = [];
+  const contrastLimitsMatrix = [];
   for (let i = 0; i < coreferenceArray.length; i += 1) {
     const row = new Array(MAX_CHANNELS).fill(0);
+    const limitsRow = new Array(MAX_CHANNELS * 2).fill(0);
     for (let j = 0; j < coreferenceArray[i].length; j += 1) {
       row[coreferenceArray[i][j]] = 1;
+      const [min, max] = contrastLimits[i][j];
+      limitsRow[coreferenceArray[i][j] * 2] = min;
+      limitsRow[coreferenceArray[i][j] * 2 + 1] = max;
     }
     coreferenceMatrix.push(...row);
+    contrastLimitsMatrix.push(...limitsRow);
   }
 
   const padSize = MAX_COLOCATION_CHANNELS - coreferenceArray.length;
@@ -25,9 +33,31 @@ export function buildCoreferenceMatrix(
   }
 
   coreferenceMatrix.push(...Array(padSize * MAX_CHANNELS).fill(0));
+  contrastLimitsMatrix.push(...Array(padSize * MAX_CHANNELS * 2).fill(0));
 
-  return coreferenceMatrix;
+  return { coreferenceMatrix, contrastLimitsMatrix };
 }
+
+/**
+ * @param {Array<Array<[min: number, max: number]>>} [normalizers]
+ */
+export function padNormalizers(
+  normalizers = [],
+) {
+  const newCoreferenceArray = normalizers.reduce((acc, val) => acc.concat(val), []);
+
+  const padSize = MAX_COLOCATION_CHANNELS - normalizers.length;
+  if (padSize < 0) {
+    throw Error(
+      `${normalizers.length} normalizers passed in, but only ${MAX_COLOCATION_CHANNELS} are allowed.`,
+    );
+  }
+
+  newCoreferenceArray.push(...Array(padSize * 2).fill(0));
+
+  return newCoreferenceArray;
+}
+
 
 /**
  * @param { Array<Array<[min: number, max: number]>> } [contrastLimits]

@@ -1,13 +1,12 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
-import { Grid, Slider } from '@vitessce/styles';
-import { debounce, isEqual } from 'lodash-es';
+import { Grid } from '@vitessce/styles';
+import { isEqual } from 'lodash-es';
 
 import {
   getSourceFromLoader,
   getMultiSelectionStats,
   toRgbUIString,
-  abbreviateNumber,
   DOMAINS,
 } from '@vitessce/spatial-utils';
 import ChannelOptions from './ChannelOptions.js';
@@ -15,65 +14,14 @@ import {
   ChannelSelectionDropdown,
   ChannelVisibilityCheckbox,
 } from './shared-channel-controls.js';
-import { useChannelSliderStyles } from './styles.js';
+import { ChannelSlider } from './RasterChannelController.js';
 
-/**
- * Slider for controlling current colormap.
- * @prop {string} color Current color for this channel.
- * @prop {arry} slider Current value of the slider.
- * @prop {function} handleChange Callback for each slider change.
- * @prop {array} domain Current max/min allowable slider values.
- */
-function ChannelSlider({
-  color,
-  slider = [0, 0],
-  handleChange,
-  domain = [0, 0],
-  dtype,
-  disabled,
-}) {
-  const [min, max] = domain;
-  const sliderCopy = slider.slice();
-  if (slider[0] < min) {
-    sliderCopy[0] = min;
-  }
-  if (slider[1] > max) {
-    sliderCopy[1] = max;
-  }
-  const handleChangeDebounced = useCallback(
-    debounce(handleChange, 3, { trailing: true }),
-    [handleChange],
-  );
-
-  const { classes } = useChannelSliderStyles();
-
-  const step = max - min < 500 && dtype.startsWith('Float') ? (max - min) / 500 : 1;
-  return (
-    <Slider
-      slotProps={{ valueLabel: { className: classes.valueLabel } }}
-      value={slider}
-      valueLabelFormat={abbreviateNumber}
-      onChange={(e, v) => handleChangeDebounced(v)}
-      valueLabelDisplay="auto"
-      getAriaLabel={(index) => {
-        const labelPrefix = index === 0 ? 'Low value slider' : 'High value slider';
-        return `${labelPrefix} for ${color} colormap channel`;
-      }}
-      getAriaValueText={() => `Current colormap values: ${color}-${slider}`}
-      min={min}
-      max={max}
-      step={step}
-      orientation="horizontal"
-      style={{ color, marginTop: '7px' }}
-      disabled={disabled}
-    />
-  );
-}
 
 /**
  * Controller for the handling the colormapping sliders.
  * @prop {boolean} visibility Whether or not this channel is "on"
  * @prop {array} sliders Current slider ranges.
+ * @prop {array} normalizer Normalization slider range.
  * @prop {array} color Current color for this channel.
  * @prop {array} domain Current max/min for this channel.
  * @prop {string} dimName Name of the dimensions this slider controls (usually "channel").
@@ -86,6 +34,7 @@ function ChannelSlider({
 function ColocationChannelController({
   visibility = false,
   sliders,
+  normalizer,
   color,
   channels,
   channelId,
@@ -182,45 +131,57 @@ function ColocationChannelController({
    *  e.g { channel: 2 } // channel dimension, third channel
    */
   return (
-    <Grid container direction="row" justifyContent="space-between">
-      <Grid size={10} container direction="column">
-        {selectionIndices.map((selectionIndex, index) => (
+    <Grid container direction="column" justifyContent="center">
+      <Grid container direction="row" justifyContent="space-between">
+        <Grid size={10} container direction="column">
+          {selectionIndices.map((selectionIndex, index) => (
           // eslint-disable-next-line react/no-array-index-key
-          <div key={index}>
-            <Grid>
+            <div key={index}>
               <ChannelSelectionDropdown
                 handleChange={v => handlePropertyChange('selection', v, index)}
                 selectionIndex={selectionIndex}
                 channelOptions={channelOptions}
                 disabled={isLoading}
               />
-            </Grid>
-            <Grid marginLeft={1}>
-              <ChannelSlider
-                color={rgbColor}
-                slider={sliders[index]}
-                domain={domain || DOMAINS[dtype]}
-                dtype={dtype}
-                handleChange={v => handlePropertyChange('slider', v, index)}
-                disabled={isLoading}
-              />
-            </Grid>
-          </div>
-        ))}
-      </Grid>
-      <Grid size={1} container direction="column">
-        <Grid size={1} sx={{ marginTop: '4px' }}>
-          <ChannelOptions
-            handlePropertyChange={handlePropertyChange}
-            handleChannelRemove={handleChannelRemove}
-            disabled={isLoading}
-          />
+              <Grid marginLeft={1}>
+                <ChannelSlider
+                  color="#FFFFFF"
+                  slider={sliders[index]}
+                  domain={domain || DOMAINS[dtype]}
+                  dtype={dtype}
+                  handleChange={v => handlePropertyChange('slider', v, index)}
+                  disabled={isLoading}
+                />
+              </Grid>
+            </div>
+          ))}
         </Grid>
+        <Grid size={1} container direction="column">
+          <Grid size={1} sx={{ marginTop: '4px' }}>
+            <ChannelOptions
+              handlePropertyChange={handlePropertyChange}
+              handleChannelRemove={handleChannelRemove}
+              disabled={isLoading}
+            />
+          </Grid>
+        </Grid>
+      </Grid>
+      <Grid container direction="row" justifyContent="space-between">
         <Grid size={2}>
           <ChannelVisibilityCheckbox
             color={rgbColor}
             checked={visibility}
             toggle={() => handlePropertyChange('visible', !visibility)}
+            disabled={isLoading}
+          />
+        </Grid>
+        <Grid size={9}>
+          <ChannelSlider
+            color={rgbColor}
+            slider={normalizer}
+            domain={[0, 1]}
+            dtype="Float"
+            handleChange={v => handlePropertyChange('normalizer', v)}
             disabled={isLoading}
           />
         </Grid>

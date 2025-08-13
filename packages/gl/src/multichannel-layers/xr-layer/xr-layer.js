@@ -9,7 +9,7 @@ import { Model, Geometry, Texture2D } from '@luma.gl/core';
 import { ProgramManager } from '@luma.gl/engine';
 import channels from './shader-modules/channel-intensity.js';
 import { padContrastLimits } from '../utils.js';
-import { buildCoreferenceMatrix, padCoreferenceContrastLimits, padCoreferenceColors } from '../utils-coreference.js';
+import { buildCoreferenceMatrix, padCoreferenceContrastLimits, padCoreferenceColors, padNormalizers } from '../utils-coreference.js';
 import { getRenderingAttrs } from './utils.js';
 
 const defaultProps = {
@@ -26,6 +26,7 @@ const defaultProps = {
     compare: true,
   },
   colocations: { type: 'array', value: [], compare: true },
+  colocationsNormalizers: { type: 'array', value: [], compare: true },
   colocationContrastLimits: { type: 'array', value: [], compare: true },
   colocationColors: { type: 'array', value: [], compare: true },
 };
@@ -242,7 +243,7 @@ export default class MultichannelXRLayer extends Layer {
   draw({ uniforms }) {
     const { textures, model } = this.state;
     if (textures && model) {
-      const { contrastLimits, domain, dtype, channelsVisible, colocations, colocationContrastLimits, colocationColors } = this.props;
+      const { contrastLimits, domain, dtype, channelsVisible, colocations, colocationsNormalizers, colocationContrastLimits, colocationColors } = this.props;
       // Check number of textures not null.
       const numTextures = Object.values(textures).filter(t => t).length;
       // Slider values and color values can come in before textures since their data is async.
@@ -254,8 +255,9 @@ export default class MultichannelXRLayer extends Layer {
         dtype,
       });
 
-      const coreferenceMatrix = buildCoreferenceMatrix(colocations);
-      const paddedColocationContrastLimits = padCoreferenceContrastLimits(colocationContrastLimits);
+      const { coreferenceMatrix, contrastLimitsMatrix } = buildCoreferenceMatrix(colocations, colocationContrastLimits);
+      const paddedCoreferenceNormalizers = padNormalizers(colocationsNormalizers);
+      // const paddedColocationContrastLimits = padCoreferenceContrastLimits(colocationContrastLimits);
       const paddedColocationColors = padCoreferenceColors(colocationColors);
 
       model
@@ -263,7 +265,8 @@ export default class MultichannelXRLayer extends Layer {
           ...uniforms,
           contrastLimits: paddedContrastLimits,
           colocations: coreferenceMatrix,
-          colocationContrastLimits: paddedColocationContrastLimits,
+          coreferenceNormalizers: paddedCoreferenceNormalizers,
+          colocationContrastLimits: contrastLimitsMatrix,
           colocationColors: paddedColocationColors,
           ...textures,
         })

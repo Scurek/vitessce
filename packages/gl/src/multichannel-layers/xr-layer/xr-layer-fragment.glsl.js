@@ -1,7 +1,6 @@
 export default `\
 #define SHADER_NAME xr-layer-fragment-shader
 #define MAX_COLOCATIONS 6
-#define COLOCATION_LIMITS_SIZE 72
 #define COLOCATION_ARRAY_SIZE 36
 
 precision highp float;
@@ -23,7 +22,8 @@ uniform vec2 contrastLimits[6];
 
 // colocations (MedVis challenge)
 uniform bool colocations[COLOCATION_ARRAY_SIZE];
-uniform vec2 colocationContrastLimits[COLOCATION_LIMITS_SIZE];
+uniform vec2 coreferenceNormalizers[MAX_COLOCATIONS];
+uniform vec2 colocationContrastLimits[COLOCATION_ARRAY_SIZE];
 uniform vec3 colocationColors[MAX_COLOCATIONS];
 
 float combine_intensity(inout int activeChannels, float intensities[6], int channel) {
@@ -40,13 +40,17 @@ float combine_intensity(inout int activeChannels, float intensities[6], int chan
   return combined;
 }
 
+float normalizeWithLimits(float value, vec2 limits) {
+  return max(0., (value - limits[0]) / max(0.0005, (limits[1] - limits[0])));
+}
+
 void compute_colocations(inout vec4 fragcolor, float intensities[6]) {
   for (int i = 0; i < MAX_COLOCATIONS; i++) {
     int activeChannels = 0;
     float combined = combine_intensity(activeChannels, intensities, i);
     if (activeChannels > 0) {
       // vec3 color = (combined / float(activeChannels)) * colocationColors[i];
-      vec3 color = combined * colocationColors[i];
+      vec3 color = normalizeWithLimits(combined, coreferenceNormalizers[i]) * colocationColors[i];
       fragcolor.rgb += color;
     }
   }

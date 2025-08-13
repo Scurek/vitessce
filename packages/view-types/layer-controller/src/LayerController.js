@@ -285,7 +285,7 @@ export default function LayerController(props) {
     );
     // const domain = domains[0];
     // const slider = domain;
-    const color = [255, 255, 255];
+    const color = [255, 255, 0];
     const visible = true;
     // const newColocationId = colocations?.length ?? 0;
     // const newAreLayerChannelsLoading = [...areLayerChannelsLoading];
@@ -296,6 +296,7 @@ export default function LayerController(props) {
     const colocation = {
       selection: [0, 1],
       sliders: [sliders[0], sliders[0]],
+      normalizer: [0, 1],
       visible,
       color,
     };
@@ -533,6 +534,7 @@ export default function LayerController(props) {
               visibility={c.visible}
               selectionIndices={c.selection}
               sliders={c.sliders}
+              normalizer={c.normalizer}
               color={c.color}
               channels={channels}
               channelId={channelId}

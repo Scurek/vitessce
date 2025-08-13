@@ -420,6 +420,7 @@ class Spatial extends AbstractSpatialOrScatterplot {
         : c.visible)),
       excludeBackground: useTransparentColor,
       colocations: layerDef.colocations?.map(c => (c.visible ? c.selection : [])) ?? [],
+      colocationsNormalizers: layerDef.colocations?.map(c => c.normalizer) ?? [],
       colocationContrastLimits: layerDef.colocations?.map(c => c.sliders) ?? [],
       colocationColors: layerDef.colocations?.map(c => c.color.map(col => col / 255)) ?? [],
     };
@@ -529,6 +530,7 @@ class Spatial extends AbstractSpatialOrScatterplot {
       ...rgbInterleavedProps,
       ...rgbProps,
       colocations: layerProps.colocations,
+      colocationsNormalizers: layerProps.colocationsNormalizers,
       colocationContrastLimits: layerProps.colocationContrastLimits,
       colocationColors: layerProps.colocationColors,
     });
