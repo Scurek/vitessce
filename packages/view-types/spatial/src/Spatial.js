@@ -419,7 +419,7 @@ class Spatial extends AbstractSpatialOrScatterplot {
         ? false
         : c.visible)),
       excludeBackground: useTransparentColor,
-      opacities: layerDef.channels.map(() => 1),
+      opacities: layerDef.channels.map(c => (c.opacity !== undefined ? c.opacity : 1.0)),
       colocations: layerDef.colocations?.map(c => (c.visible ? c.selection : [])) ?? [],
       colocationsOpacities: layerDef.colocations?.map(c => c.opacity) ?? [],
       colocationsNormalizers: layerDef.colocations?.map(c => c.normalizer) ?? [],

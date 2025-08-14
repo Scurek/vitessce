@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useEffect } from 'react';
 
-import { Grid, Slider } from '@vitessce/styles';
+import { Grid, Slider, InputLabel } from '@vitessce/styles';
 import { debounce, isEqual } from 'lodash-es';
 
 import {
@@ -15,8 +15,7 @@ import {
   ChannelSelectionDropdown,
   ChannelVisibilityCheckbox,
 } from './shared-channel-controls.js';
-import { useChannelSliderStyles } from './styles.js';
-
+import { useChannelSliderStyles, useSelectStyles, useInputLabelStyles } from './styles.js';
 /**
  * Slider for controlling current colormap.
  * @prop {string} color Current color for this channel.
@@ -86,6 +85,7 @@ export function ChannelSlider({
  */
 function RasterChannelController({
   visibility = false,
+  opacity = 1.0,
   slider,
   color,
   channels,
@@ -103,6 +103,9 @@ function RasterChannelController({
   isLoading,
   use3d: newUse3d,
 }) {
+  const { classes } = useSelectStyles();
+  const { classes: inputLabelClasses } = useInputLabelStyles();
+
   const { dtype } = getSourceFromLoader(loader);
   const [domain, setDomain] = useState(null);
   const [domainType, setDomainType] = useState(null);
@@ -203,6 +206,30 @@ function RasterChannelController({
             handleChannelRemove={handleChannelRemove}
             handleIQRUpdate={handleIQRUpdate}
             disabled={isLoading}
+          />
+        </Grid>
+      </Grid>
+      <Grid container direction="row" marginTop="4px" alignItems="center" justifyContent="space-between">
+        <Grid size={3}>
+          <InputLabel
+            htmlFor={`channel-controller-${channelId}-opacity`}
+            classes={{ root: inputLabelClasses.inputLabelRoot }}
+          >
+            Opacity:
+          </InputLabel>
+        </Grid>
+        <Grid size={8} display="flex">
+          <Slider
+            id={`channel-controller-${channelId}-opacity`}
+            slotProps={{ valueLabel: { className: classes.sliderValueLabel } }}
+            value={opacity}
+            onChange={(e, v) => handlePropertyChange('opacity', v)}
+            valueLabelDisplay="auto"
+            aria-label="Channel opacity slider"
+            min={0}
+            max={1}
+            step={0.01}
+            orientation="horizontal"
           />
         </Grid>
       </Grid>

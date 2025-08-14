@@ -75,7 +75,6 @@ export function padOpacities({
   channelsVisible = [],
 }) {
   const newOpacities = opacities.map((opacity, i) => (channelsVisible[i] ? opacity : 0));
-  // Need to pad contrastLimits and colors with default values (required by shader)
   const padSize = MAX_CHANNELS - newOpacities.length;
   if (padSize < 0) {
     throw Error(

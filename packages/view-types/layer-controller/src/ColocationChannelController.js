@@ -79,23 +79,23 @@ function ColocationChannelController({
           </Grid>
         </Grid>
       </Grid>
-      <Grid container direction="row" marginTop="10px" alignItems="center">
+      <Grid container direction="row" marginTop="8px" alignItems="center" justifyContent="space-between">
         <Grid size={3}>
           <InputLabel
-            htmlFor={`channel-controller-${channelId}`}
+            htmlFor={`colocation-controller-${channelId}-opacity`}
             classes={{ root: inputLabelClasses.inputLabelRoot }}
           >
             Opacity:
           </InputLabel>
         </Grid>
-        <Grid size={9} display="flex">
+        <Grid size={8} display="flex">
           <Slider
-            id={`channel-controller-${channelId}`}
+            id={`colocation-controller-${channelId}-opacity`}
             slotProps={{ valueLabel: { className: classes.sliderValueLabel } }}
             value={opacity}
             onChange={(e, v) => handlePropertyChange('opacity', v)}
             valueLabelDisplay="auto"
-            aria-label="Layer opacity slider"
+            aria-label="Colocation opacity slider"
             min={0}
             max={1}
             step={0.01}

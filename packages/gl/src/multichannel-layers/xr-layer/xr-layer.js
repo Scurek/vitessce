@@ -258,10 +258,10 @@ export default class MultichannelXRLayer extends Layer {
         dtype,
       });
 
-      const paddedOpacities = padOpacities(
+      const paddedOpacities = padOpacities({
         opacities,
         channelsVisible,
-      );
+      });
 
       const paddedColocationOpacities = padWithDefault([...colocationsOpacities], 0, MAX_COLOCATION_CHANNELS - colocationsOpacities.length);
 

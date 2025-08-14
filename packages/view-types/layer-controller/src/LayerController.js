@@ -417,6 +417,7 @@ export default function LayerController(props) {
             key={`channel-controller-${channelId}`}
             dimName={channelLabel}
             visibility={c.visible}
+            opacity={c.opacity}
             selectionIndex={c.selection[channelLabel]}
             slider={c.slider}
             color={c.color}

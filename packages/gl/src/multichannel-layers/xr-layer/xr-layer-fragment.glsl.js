@@ -70,7 +70,7 @@ void main() {
   intensities[5] = float(texture(channel5, vTexCoord).r);
   DECKGL_PROCESS_INTENSITY(intensities[5], contrastLimits[5], 5);
 
-  DECKGL_MUTATE_COLOR(gl_FragColor, intensities[0], intensities[1], intensities[2], intensities[3], intensities[4], intensities[5], vTexCoord);
+  DECKGL_MUTATE_COLOR(gl_FragColor, intensities[0] * opacities[0], intensities[1] * opacities[1], intensities[2] * opacities[2], intensities[3] * opacities[3], intensities[4] * opacities[4], intensities[5] * opacities[5], vTexCoord);
 
   compute_colocations(gl_FragColor, intensities);
 
