@@ -8,9 +8,10 @@ import { COORDINATE_SYSTEM, Layer, project32, picking } from '@deck.gl/core';
 import { Model, Geometry, Texture2D } from '@luma.gl/core';
 import { ProgramManager } from '@luma.gl/engine';
 import channels from './shader-modules/channel-intensity.js';
-import { padContrastLimits } from '../utils.js';
-import { buildCoreferenceMatrix, padCoreferenceContrastLimits, padCoreferenceColors, padNormalizers } from '../utils-coreference.js';
+import { padContrastLimits, padOpacities, padWithDefault } from '../utils.js';
+import { buildCoreferenceMatrix, padCoreferenceColors, padNormalizers } from '../utils-coreference.js';
 import { getRenderingAttrs } from './utils.js';
+import { MAX_COLOCATION_CHANNELS } from '../../constants.js';
 
 const defaultProps = {
   pickable: { type: 'boolean', value: true, compare: true },
@@ -25,9 +26,10 @@ const defaultProps = {
     value: GL.NEAREST,
     compare: true,
   },
+  opacities: { type: 'array', value: [], compare: true },
   colocations: { type: 'array', value: [], compare: true },
+  colocationsOpacities: { type: 'array', value: [], compare: true },
   colocationsNormalizers: { type: 'array', value: [], compare: true },
-  colocationContrastLimits: { type: 'array', value: [], compare: true },
   colocationColors: { type: 'array', value: [], compare: true },
 };
 
@@ -44,8 +46,10 @@ const defaultProps = {
  * @property {Object=} modelMatrix Math.gl Matrix4 object containing an affine transformation to be applied to the image.
  * Thus setting this to a truthy value (with a colormap set) indicates that the shader should make that color transparent.
  * @property {number=} interpolation The TEXTURE_MIN_FILTER and TEXTURE_MAG_FILTER for WebGL rendering (see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter) - default is GL.NEAREST
+ * @property {Array.<number>} opacities
  * @property {Array.<Array.<number>>} colocations
- * @property {Array.<Array.<Array.<number>>>} colocationContrastLimits
+ * @property {Array.<number>} colocationsOpacities
+ * @property {Array.<Array.<number>>} colocationsNormalizers
  * @property {Array.<Array.<number>>} colocationColors
  */
 /**
@@ -243,30 +247,36 @@ export default class MultichannelXRLayer extends Layer {
   draw({ uniforms }) {
     const { textures, model } = this.state;
     if (textures && model) {
-      const { contrastLimits, domain, dtype, channelsVisible, colocations, colocationsNormalizers, colocationContrastLimits, colocationColors } = this.props;
+      const { contrastLimits, domain, dtype, channelsVisible, colocations, colocationsOpacities, colocationsNormalizers, colocationColors, opacities } = this.props;
       // Check number of textures not null.
       const numTextures = Object.values(textures).filter(t => t).length;
       // Slider values and color values can come in before textures since their data is async.
       // Thus we pad based on the number of textures bound.
       const paddedContrastLimits = padContrastLimits({
         contrastLimits: contrastLimits.slice(0, numTextures),
-        channelsVisible: channelsVisible.slice(0, numTextures),
         domain,
         dtype,
       });
 
-      const { coreferenceMatrix, contrastLimitsMatrix } = buildCoreferenceMatrix(colocations, colocationContrastLimits);
+      const paddedOpacities = padOpacities(
+        opacities,
+        channelsVisible,
+      );
+
+      const paddedColocationOpacities = padWithDefault([...colocationsOpacities], 0, MAX_COLOCATION_CHANNELS - colocationsOpacities.length);
+
+      const coreferenceMatrix = buildCoreferenceMatrix(colocations);
       const paddedCoreferenceNormalizers = padNormalizers(colocationsNormalizers);
-      // const paddedColocationContrastLimits = padCoreferenceContrastLimits(colocationContrastLimits);
       const paddedColocationColors = padCoreferenceColors(colocationColors);
 
       model
         .setUniforms({
           ...uniforms,
           contrastLimits: paddedContrastLimits,
+          opacities: paddedOpacities,
           colocations: coreferenceMatrix,
+          colocationOpacities: paddedColocationOpacities,
           coreferenceNormalizers: paddedCoreferenceNormalizers,
-          colocationContrastLimits: contrastLimitsMatrix,
           colocationColors: paddedColocationColors,
           ...textures,
         })

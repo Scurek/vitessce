@@ -36,21 +36,17 @@ export function getDtypeValues(dtype) {
 /**
  * @param {{
  *   contrastLimits?: [min: number, max: number][],
- *   channelsVisible: boolean[],
  *   domain?: [min: number, max: number],
  *   dtype: keyof typeof DTYPE_VALUES,
  * }}
  */
 export function padContrastLimits({
   contrastLimits = [],
-  channelsVisible,
   domain,
   dtype,
 }) {
   const maxSliderValue = (domain && domain[1]) || getDtypeValues(dtype).max;
-  const newContrastLimits = contrastLimits.map((slider, i) => (channelsVisible[i]
-    ? slider
-    : /** @type {[number, number]} */ ([maxSliderValue, maxSliderValue])));
+  const newContrastLimits = [...contrastLimits];
   // Need to pad contrastLimits and colors with default values (required by shader)
   const padSize = MAX_CHANNELS - newContrastLimits.length;
   if (padSize < 0) {
@@ -66,6 +62,34 @@ export function padContrastLimits({
   ).reduce((acc, val) => acc.concat(val), []);
 
   return paddedContrastLimits;
+}
+
+/**
+ * @param {{
+ *   opacities?: number[],
+ *   channelsVisible: boolean[],
+ * }}
+ */
+export function padOpacities({
+  opacities = [],
+  channelsVisible = [],
+}) {
+  const newOpacities = opacities.map((opacity, i) => (channelsVisible[i] ? opacity : 0));
+  // Need to pad contrastLimits and colors with default values (required by shader)
+  const padSize = MAX_CHANNELS - newOpacities.length;
+  if (padSize < 0) {
+    throw Error(
+      `${newOpacities.lengths} opacities passed in, but only 6 are allowed.`,
+    );
+  }
+
+  const paddedOpacities = padWithDefault(
+    newOpacities,
+    0,
+    padSize,
+  );
+
+  return paddedOpacities;
 }
 
 export function onPointer(layer) {

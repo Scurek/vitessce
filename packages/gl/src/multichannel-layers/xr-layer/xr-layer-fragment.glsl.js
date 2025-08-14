@@ -19,11 +19,12 @@ in vec2 vTexCoord;
 
 // range
 uniform vec2 contrastLimits[6];
+uniform float opacities[6];
 
 // colocations (MedVis challenge)
 uniform bool colocations[COLOCATION_ARRAY_SIZE];
+uniform float colocationOpacities[MAX_COLOCATIONS];
 uniform vec2 coreferenceNormalizers[MAX_COLOCATIONS];
-uniform vec2 colocationContrastLimits[COLOCATION_ARRAY_SIZE];
 uniform vec3 colocationColors[MAX_COLOCATIONS];
 
 float combine_intensity(inout int activeChannels, float intensities[6], int channel) {
@@ -32,9 +33,7 @@ float combine_intensity(inout int activeChannels, float intensities[6], int chan
     int colocationIndex = channel * 6 + i;
     if (colocations[colocationIndex]) {
       activeChannels++;
-      float intensity = intensities[i];
-      DECKGL_PROCESS_INTENSITY(intensity, colocationContrastLimits[colocationIndex], i);
-      combined *= intensity;
+      combined *= intensities[i];
     }
   }
   return combined;
@@ -47,40 +46,33 @@ float normalizeWithLimits(float value, vec2 limits) {
 void compute_colocations(inout vec4 fragcolor, float intensities[6]) {
   for (int i = 0; i < MAX_COLOCATIONS; i++) {
     int activeChannels = 0;
-    float combined = combine_intensity(activeChannels, intensities, i);
+    float combined = combine_intensity(activeChannels, intensities, i) * colocationOpacities[i];
     if (activeChannels > 0) {
-      // vec3 color = (combined / float(activeChannels)) * colocationColors[i];
       vec3 color = normalizeWithLimits(combined, coreferenceNormalizers[i]) * colocationColors[i];
       fragcolor.rgb += color;
     }
   }
 }
 
-float unprocessedIntensities[6];
+float intensities[6];
 
 void main() {
-  float intensity0 = float(texture(channel0, vTexCoord).r);
-  unprocessedIntensities[0] = intensity0;
-  DECKGL_PROCESS_INTENSITY(intensity0, contrastLimits[0], 0);
-  float intensity1 = float(texture(channel1, vTexCoord).r);
-  unprocessedIntensities[1] = intensity1;
-  DECKGL_PROCESS_INTENSITY(intensity1, contrastLimits[1], 1);
-  float intensity2 = float(texture(channel2, vTexCoord).r);
-  unprocessedIntensities[2] = intensity2;
-  DECKGL_PROCESS_INTENSITY(intensity2, contrastLimits[2], 2);
-  float intensity3 = float(texture(channel3, vTexCoord).r);
-  unprocessedIntensities[3] = intensity3;
-  DECKGL_PROCESS_INTENSITY(intensity3, contrastLimits[3], 3);
-  float intensity4 = float(texture(channel4, vTexCoord).r);
-  unprocessedIntensities[4] = intensity4;
-  DECKGL_PROCESS_INTENSITY(intensity4, contrastLimits[4], 4);
-  float intensity5 = float(texture(channel5, vTexCoord).r);
-  unprocessedIntensities[5] = intensity5;
-  DECKGL_PROCESS_INTENSITY(intensity5, contrastLimits[5], 5);
+  intensities[0] = float(texture(channel0, vTexCoord).r);
+  DECKGL_PROCESS_INTENSITY(intensities[0], contrastLimits[0], 0);
+  intensities[1] = float(texture(channel1, vTexCoord).r);
+  DECKGL_PROCESS_INTENSITY(intensities[1], contrastLimits[1], 1);
+  intensities[2] = float(texture(channel2, vTexCoord).r);
+  DECKGL_PROCESS_INTENSITY(intensities[2], contrastLimits[2], 2);
+  intensities[3] = float(texture(channel3, vTexCoord).r);
+  DECKGL_PROCESS_INTENSITY(intensities[3], contrastLimits[3], 3);
+  intensities[4] = float(texture(channel4, vTexCoord).r);
+  DECKGL_PROCESS_INTENSITY(intensities[4], contrastLimits[4], 4);
+  intensities[5] = float(texture(channel5, vTexCoord).r);
+  DECKGL_PROCESS_INTENSITY(intensities[5], contrastLimits[5], 5);
 
-  DECKGL_MUTATE_COLOR(gl_FragColor, intensity0, intensity1, intensity2, intensity3, intensity4, intensity5, vTexCoord);
+  DECKGL_MUTATE_COLOR(gl_FragColor, intensities[0], intensities[1], intensities[2], intensities[3], intensities[4], intensities[5], vTexCoord);
 
-  compute_colocations(gl_FragColor, unprocessedIntensities);
+  compute_colocations(gl_FragColor, intensities);
 
   geometry.uv = vTexCoord;
   DECKGL_FILTER_COLOR(gl_FragColor, geometry);

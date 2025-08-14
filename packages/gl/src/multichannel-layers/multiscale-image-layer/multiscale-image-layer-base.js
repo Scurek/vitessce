@@ -14,9 +14,10 @@ const defaultProps = {
   domain: { type: 'array', value: [], compare: true },
   viewportId: { type: 'string', value: '', compare: true },
   interpolation: { type: 'number', value: null, compare: true },
+  opacities: { type: 'array', value: [], compare: true },
   colocations: { type: 'array', value: [], compare: true },
+  colocationsOpacities: { type: 'array', value: [], compare: true },
   colocationsNormalizers: { type: 'array', value: [], compare: true },
-  colocationContrastLimits: { type: 'array', value: [], compare: true },
   colocationColors: { type: 'array', value: [], compare: true },
 };
 

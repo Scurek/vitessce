@@ -277,36 +277,15 @@ export default function LayerController(props) {
     if (channels.length === 0) {
       return;
     }
-    const { sliders } = await getDomainsAndSliders(
-      loader,
-      [channels[0].selection],
-      domainType,
-      use3d,
-    );
-    // const domain = domains[0];
-    // const slider = domain;
     const color = [255, 255, 0];
     const visible = true;
-    // const newColocationId = colocations?.length ?? 0;
-    // const newAreLayerChannelsLoading = [...areLayerChannelsLoading];
-
-    // const loadingId = newColocationId + viv.MAX_CHANNELS;
-    // newAreLayerChannelsLoading[loadingId] = true;
-    // setAreLayerChannelsLoading(newAreLayerChannelsLoading);
     const colocation = {
       selection: [0, 1],
-      sliders: [sliders[0], sliders[0]],
+      opacity: 1,
       normalizer: [0, 1],
       visible,
       color,
     };
-    // setImageLayerCallback(() => {
-    //   setColocationChannel({ ...colocation, slider: [sliders[0]] }, newColocationId);
-    //   const areLayerChannelsLoadingCallback = [...newAreLayerChannelsLoading];
-    //   areLayerChannelsLoadingCallback[loadingId] = false;
-    //   setAreLayerChannelsLoading(areLayerChannelsLoadingCallback);
-    //   setImageLayerCallback(null);
-    // });
     addColocationChannel(colocation);
   };
 
@@ -469,55 +448,11 @@ export default function LayerController(props) {
       colocationChannelControllers = colocations?.map(
         (c, channelId) => {
           const loadingId = channelId + viv.MAX_CHANNELS;
-          // Update the auxiliary store with the current loading state of a channel.
-          // const setIsLoading = (val) => {
-          //   const newAreLayerChannelsLoading = [...areLayerChannelsLoading];
-          //   newAreLayerChannelsLoading[loadingId] = val;
-          //   setAreLayerChannelsLoading(newAreLayerChannelsLoading);
-          // };
-          // Change one property of a channel (for now - soon
-          // nested structures allowing for multiple z/t selecitons at once, for example).
           const handleChannelPropertyChange = async (property, value, index = 0) => {
             const update = {};
             if (property === 'selection') {
-              // setIsLoading(true);
               update.selection = [...colocations[channelId].selection];
               update.selection[index] = value;
-
-              const selections = [
-                channels[value][property],
-              ];
-              const { sliders } = await getDomainsAndSliders(
-                loader,
-                selections,
-                domainType,
-                use3d,
-              );
-              update.sliders = [...colocations[channelId].sliders];
-              [update.sliders[index]] = sliders;
-              setColocationChannel({ ...c, ...update }, channelId);
-
-              // Call back for raster layer handles update of UI
-              // like sliders and the loading state of the channel.
-              // setImageLayerCallback(async () => {
-              //   const selections = [
-              //     { ...colocations[channelId][property][index], ...value },
-              //   ];
-              //   const { sliders } = await getDomainsAndSliders(
-              //     loader,
-              //     selections,
-              //     domainType,
-              //     use3d,
-              //   );
-              //   update.sliders = [...colocations[channelId].sliders];
-              //   [update.sliders[index]] = sliders;
-              //   setColocationChannel({ ...c, ...update }, channelId);
-              //   setImageLayerCallback(null);
-              //   setIsLoading(false);
-              // });
-            } else if (property === 'slider') {
-              update.sliders = [...colocations[channelId].sliders];
-              update.sliders[index] = value;
               setColocationChannel({ ...c, ...update }, channelId);
             } else {
               setColocationChannel({ ...c, ...{ [property]: value } }, channelId);
@@ -529,26 +464,20 @@ export default function LayerController(props) {
           return (
             <ColocationChannelController
               // eslint-disable-next-line react/no-array-index-key
-              key={`channel-controller-${channelId}`}
-              dimName={channelLabel}
+              key={`colocation-controller-${channelId}`}
+              channelId={channelId}
               visibility={c.visible}
               selectionIndices={c.selection}
-              sliders={c.sliders}
+              opacity={c.opacity}
               normalizer={c.normalizer}
               color={c.color}
-              channels={channels}
-              channelId={channelId}
-              domainType={domainType}
               loader={loader}
-              globalLabelValues={globalLabelValues}
               theme={theme}
               channelOptions={colocationOptions}
-              colormapOn={Boolean(colormap)}
               handlePropertyChange={handleChannelPropertyChange}
               handleChannelRemove={handleChannelRemove}
               setRasterLayerCallback={setImageLayerCallback}
               isLoading={areLayerChannelsLoading[loadingId]}
-              use3d={use3d}
             />
           );
         },
