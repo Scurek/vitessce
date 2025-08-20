@@ -28,9 +28,9 @@ import {
  */
 function ColocationChannelController({
   channelId,
-  visibility = false,
-  opacity,
-  normalizer,
+  visibility = true,
+  opacity = 1.0,
+  normalizer = [0, 1],
   color,
   theme,
   channelOptions,

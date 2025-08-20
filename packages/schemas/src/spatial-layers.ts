@@ -21,9 +21,21 @@ export const imageLayerObj = z.array(
             'Determines whether this channel of the layer will be rendered in the spatial component.',
           )
           .optional(),
+        opacity: z.number().min(0).max(1).default(1),
       })
         .strict(),
     ),
+    colocations: z.object({
+      selection: z.array(z.number().int()).describe(
+        'Indices of layer channels.',
+      ),
+      opacity: z.number().min(0).max(1).default(1),
+      normalizer: z.array(z.number().min(0).max(1)).length(2).default([0, 1]).describe(
+        'Determines the normalization range for the colocation channel.',
+      ),
+      visible: z.boolean().default(true),
+      color: z.array(z.number().min(0).max(255)).length(3),
+    }).strict(),
     colormap: z.string()
       .nullable(),
     transparentColor: z.array(z.number().describe('One of R G or B (0 - 255).'))
