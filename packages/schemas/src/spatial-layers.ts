@@ -35,7 +35,7 @@ export const imageLayerObj = z.array(
       ),
       visible: z.boolean().default(true),
       color: z.array(z.number().min(0).max(255)).length(3),
-    }).strict(),
+    }).strict().optional(),
     colormap: z.string()
       .nullable(),
     transparentColor: z.array(z.number().describe('One of R G or B (0 - 255).'))
